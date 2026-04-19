@@ -1,0 +1,92 @@
+version: '3.8'
+
+services:
+  # Network IDS
+  suricata:
+    image: jasonish/suricata:latest
+    container_name: nexura-suricata
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    volumes:
+      - ./configs/suricata:/etc/suricata
+      - ./logs/suricata:/var/log/suricata
+    network_mode: host
+    restart: unless-stopped
+
+  # Vulnerability Scanner (OpenVAS)
+  openvas:
+    image: ghcr.io/greenbone/openvas/stable
+    container_name: nexura-openvas
+    environment:
+      - GMP_PASSWORD=admin
+      - ADMIN_PASSWORD=admin
+    volumes:
+      - ./data/openvas:/data
+      - ./logs/openvas:/var/log
+    ports:
+      - "9392:9392"
+    restart: unless-stopped
+
+  # Threat Intelligence (MISP)
+  misp:
+    image: coolcharlie/misp
+    container_name: nexura-misp
+    environment:
+      - MYSQL_ROOT_PASSWORD=nexura123
+    volumes:
+      - ./data/misp:/var/www/MISP/app/tmp
+    ports:
+      - "80:80"
+      - "443:443"
+    restart: unless-stopped
+
+  # Incident Response (TheHive + Cortex)
+  thehive:
+    image: thehiveproject/thehive:latest
+    container_name: nexura-thehive
+    depends_on:
+      - cortex
+    environment:
+      - THEHIVE_PLAY_CONF_FILE=/etc/thehive/application.conf
+    volumes:
+      - ./data/thehive:/var/lib/thehive
+      - ./configs/thehive:/etc/thehive
+    ports:
+      - "9000:9000"
+    restart: unless-stopped
+
+  cortex:
+    image: thehiveproject/cortex:latest
+    container_name: nexura-cortex
+    environment:
+      - CORTEX_CONF_FILE=/etc/cortex/application.conf
+    volumes:
+      - ./data/cortex:/var/lib/cortex
+      - ./configs/cortex:/etc/cortex
+    ports:
+      - "9999:9000"
+    restart: unless-stopped
+
+  # NEXURA Core
+  nexura:
+    build: ./backend
+    container_name: nexura-core
+    depends_on:
+      - openvas
+      - suricata
+      - misp
+      - thehive
+    environment:
+      - OPENVAS_HOST=openvas
+      - SURICATA_HOST=suricata
+      - MISP_HOST=misp
+      - THEHIVE_HOST=thehive
+    volumes:
+      - ./data/nexura:/app/data
+      - ./configs/nexura:/app/config
+    ports:
+      - "8002:8002"
+    restart: unless-stopped

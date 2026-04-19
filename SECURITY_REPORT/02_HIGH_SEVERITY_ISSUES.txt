@@ -1,0 +1,32 @@
+NEXURA_OLD - YUQORI DARAJALI XAVFSIZLIK MUAMMOLARI
+
+1. WEAK CRYPTOGRAPHY (CVSS 7.5)
+================================
+File: backend/crypto_engine.py
+Problem: XOR layer not real encryption, hardcoded keys
+Fix: Use PBKDF2 for key derivation, remove XOR layer
+
+2. INSUFFICIENT INPUT VALIDATION (CVSS 7.2)
+===============================================
+File: backend/main.py:173-182
+Problem: Regex doesn't validate IPv4, no URL scheme validation
+Fix: Use ipaddress module, whitelist approach
+
+3. MISSING CSRF PROTECTION (CVSS 7.0)
+=======================================
+File: backend/main.py, frontend/securityApi.js
+Problem: No CSRF tokens, token in localStorage
+Fix: Use HTTP-only cookies or CSRF tokens
+
+4. WEAK INPUT FILTERING (CVSS 6.8)
+====================================
+File: backend/main.py:193-197
+Problem: Blacklist XSS patterns - can be bypassed
+Fix: Use bleach library, escape HTML, whitelist
+
+5. HARDCODED BOT TOKEN (CVSS 7.8)
+===================================
+File: backend/bot.py:12
+Problem: Real Telegram token exposed
+Fix: Remove default value, require env var
+

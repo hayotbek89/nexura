@@ -1,0 +1,77 @@
+NEXURA_OLD - O'RTA DARAJALI XAVFSIZLIK MUAMMOLARI
+
+1. INSECURE DIRECT OBJECT REFERENCES (IDOR) - CVSS 6.5
+==========================================================
+File: backend/main.py:112-133
+Problem: IP-based access control can be spoofed
+Solution: Use proper authentication with user IDs, not IP addresses
+Code: Check resource ownership before returning data
+
+2. RATE LIMITING BYPASS - CVSS 6.3
+===================================
+File: backend/main.py:227-243
+Problem: Rate limit based on IP (can be spoofed), no user-level limits
+Solution: 
+- Rate limit per user ID, not just IP
+- Implement sliding window algorithm
+- Add global rate limiting
+- Use Redis for distributed rate limiting
+
+3. MISSING AUTH ON HEALTH ENDPOINTS - CVSS 5.7
+================================================
+File: backend/main.py:218-224
+Problem: Health endpoints accessible without authentication
+Fix: Require token or use separate monitoring endpoint
+
+4. LONG SUBPROCESS TIMEOUTS - CVSS 6.2
+=========================================
+File: backend/arsenal.py:35, scanner.py:94
+Problem: 900 seconds (15 min) timeout - can be DoS vector
+Fix: Use reasonable timeouts (60-300 seconds)
+
+5. DEPENDENCY VULNERABILITIES - CVSS 6.1
+===========================================
+npm audit findings:
+- electron <35.7.5: ASAR bypass
+- vite/esbuild: Dev server RCE
+- 3 moderate vulnerabilities total
+
+Fix: npm update; npm audit fix
+
+6. INSUFFICIENT ERROR HANDLING - CVSS 6.2
+===========================================
+Multiple files: bare except: pass
+Problem: Silent failures, information disclosure
+Fix: Log errors properly, return generic messages to users
+
+7. DOCKER SECURITY - CVSS 6.4
+===============================
+File: Dockerfile
+Problems:
+- Running as root
+- No health check
+- No non-root user
+
+Fix:
+- Create non-root user (useradd -m -u 1000 nexura)
+- Add HEALTHCHECK
+- Use multi-stage builds
+
+8. TOKEN STORAGE IN LOCALSTORAGE - CVSS 7.5
+=============================================
+File: frontend/src/api/securityApi.js
+Problem: XSS can steal tokens from localStorage
+Fix: Use HTTP-only cookies instead
+
+9. MISSING CONTENT SECURITY POLICY - CVSS 6.5
+==============================================
+Problem: No CSP header to prevent XSS
+Fix: Add CSP header via middleware:
+    Content-Security-Policy: default-src 'self'; script-src 'self'
+
+10. UNVALIDATED URL RENDERING - CVSS 6.3
+===========================================
+File: frontend/src/components/SecureTextRenderer.jsx
+Problem: Simple regex for URLs, could render javascript: URLs
+Fix: Use URL() constructor for validation
+

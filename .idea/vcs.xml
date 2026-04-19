@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="VcsDirectoryMappings">
+    <mapping directory="$PROJECT_DIR$/NEXURA_OLD" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/NEXURA_OLD/backend/aircrack-ng" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/NEXURA_OLD/backend/bettercap" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/NEXURA_OLD/backend/hashcat" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/NEXURA_OLD/backend/nmap" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/NEXURA_OLD/backend/openvas-scanner" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/NEXURA_OLD/backend/suricata" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/NEXURA_OLD/backend/tcpdump" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/NEXURA_OLD/backend/wireshark" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/opensource_tools/openvas" vcs="Git" />
+  </component>
+</project>

@@ -4,11 +4,11 @@ RUN apt-get update -qq && apt-get install -y -qq --no-install-recommends \
     nmap wget unzip \
     && rm -rf /var/lib/apt/lists/*
 
-RUN wget -q https://github.com/sullo/nikto/archive/refs/heads/master.zip -O /tmp/nikto.zip \
+RUN wget -q https://github.com/sullo/nikto/archive/refs/heads/main.zip -O /tmp/nikto.zip \
     && unzip -q /tmp/nikto.zip -d /tmp/ \
-    && mv /tmp/nikto-master/program /opt/nikto \
+    && mv /tmp/nikto-main/program /opt/nikto \
     && ln -s /opt/nikto/nikto.pl /usr/local/bin/nikto \
-    && rm -rf /tmp/nikto.zip /tmp/nikto-master
+    && rm -rf /tmp/nikto.zip /tmp/nikto-main
 
 RUN wget -q https://github.com/sqlmapproject/sqlmap/archive/refs/heads/master.zip -O /tmp/sqlmap.zip \
     && unzip -q /tmp/sqlmap.zip -d /opt/ \

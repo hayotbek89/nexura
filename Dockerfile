@@ -10,12 +10,12 @@ RUN wget -q https://github.com/projectdiscovery/nuclei/releases/latest/download/
     && rm -rf nuclei_linux_amd64.zip /tmp/nuclei
 
 WORKDIR /app
-COPY requirements.txt .
+COPY nexura_scanner/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-COPY nexura/ nexura/
-COPY gguf_models/ gguf_models/
-COPY scripts/ scripts/
+
+COPY nexura_scanner/ .
+RUN mkdir -p /app/gguf_models
 
 ENV NEXURA_MODEL=/app/gguf_models/qwen2.5-7b-instruct-q4_k_m.gguf
-ENTRYPOINT ["python", "-m", "nexura"]
-CMD ["--help"]
+EXPOSE 8080
+CMD ["python", "-m", "nexura", "web"]

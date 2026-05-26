@@ -1,0 +1,8 @@
+services:
+  - type: web
+    name: nexura
+    runtime: docker
+    plan: free
+    envVars:
+      - key: NEXURA_MODEL
+        value: /app/gguf_models/qwen2.5-7b-instruct-q4_k_m.gguf

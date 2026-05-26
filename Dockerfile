@@ -1,10 +1,16 @@
 FROM python:3.11-slim
 
 RUN apt-get update -qq && apt-get install -y -qq --no-install-recommends \
-    nmap nikto wget unzip xz-utils \
+    nmap wget unzip \
     && rm -rf /var/lib/apt/lists/*
 
-RUN wget -q https://github.com/sqlmapproject/sqlmap/archive/master.zip -O /tmp/sqlmap.zip \
+RUN wget -q https://github.com/sullo/nikto/archive/refs/heads/master.zip -O /tmp/nikto.zip \
+    && unzip -q /tmp/nikto.zip -d /tmp/ \
+    && mv /tmp/nikto-master/program /opt/nikto \
+    && ln -s /opt/nikto/nikto.pl /usr/local/bin/nikto \
+    && rm -rf /tmp/nikto.zip /tmp/nikto-master
+
+RUN wget -q https://github.com/sqlmapproject/sqlmap/archive/refs/heads/master.zip -O /tmp/sqlmap.zip \
     && unzip -q /tmp/sqlmap.zip -d /opt/ \
     && ln -s /opt/sqlmap-master/sqlmap.py /usr/local/bin/sqlmap \
     && rm -rf /tmp/sqlmap.zip

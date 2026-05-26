@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nexura Scanner</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Courier New', monospace; background: #0a0e17; color: #e0e6f0; }
+  .container { max-width: 900px; margin: 0 auto; padding: 20px; }
+  header { padding: 30px 0; border-bottom: 1px solid #1e3a5f; margin-bottom: 30px; }
+  header h1 { color: #00d4ff; font-size: 1.5em; }
+  header .subtitle { color: #4a5568; font-size: 0.85em; margin-top: 4px; }
+  .input-area { background: #111c2e; border: 1px solid #1e3a5f; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
+  textarea { width: 100%; background: #0d1b2a; border: 1px solid #1e3a5f; border-radius: 4px; color: #e0e6f0; padding: 12px; font-family: inherit; font-size: 1em; resize: vertical; min-height: 80px; }
+  textarea:focus { outline: none; border-color: #00d4ff; }
+  .input-row { display: flex; gap: 10px; margin-top: 10px; }
+  input[type="text"] { flex: 1; background: #0d1b2a; border: 1px solid #1e3a5f; border-radius: 4px; color: #e0e6f0; padding: 10px 12px; font-family: inherit; }
+  input[type="text"]:focus { outline: none; border-color: #00d4ff; }
+  button { background: #00d4ff; color: #0a0e17; border: none; border-radius: 4px; padding: 10px 24px; font-family: inherit; font-weight: bold; cursor: pointer; font-size: 0.9em; }
+  button:hover { background: #00b8e6; }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  .quick-btns { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .quick-btns button { background: #1e3a5f; color: #e0e6f0; padding: 6px 14px; font-size: 0.8em; }
+  .quick-btns button:hover { background: #2a4a7f; }
+  .results { display: none; margin-top: 20px; }
+  .results.show { display: block; }
+  .result-card { background: #111c2e; border: 1px solid #1e3a5f; border-radius: 8px; padding: 20px; margin-bottom: 15px; }
+  .result-card h3 { color: #00d4ff; font-size: 1em; margin-bottom: 8px; }
+  .result-card .status { float: right; font-size: 0.85em; }
+  .status.ok { color: #00ff88; }
+  .status.fail { color: #ff3333; }
+  .vuln { padding: 8px 10px; margin: 4px 0; border-radius: 4px; font-size: 0.85em; }
+  .vuln .badge { display: inline-block; padding: 1px 6px; border-radius: 3px; font-size: 0.75em; font-weight: bold; margin-right: 6px; }
+  .CRITICAL { background: rgba(255,51,51,0.1); border-left: 3px solid #ff3333; }
+  .CRITICAL .badge { background: #ff3333; color: #fff; }
+  .HIGH { background: rgba(255,136,0,0.1); border-left: 3px solid #ff8800; }
+  .HIGH .badge { background: #ff8800; color: #fff; }
+  .MEDIUM { background: rgba(255,204,0,0.1); border-left: 3px solid #ffcc00; }
+  .MEDIUM .badge { background: #ffcc00; color: #000; }
+  .LOW { background: rgba(102,204,255,0.1); border-left: 3px solid #66ccff; }
+  .LOW .badge { background: #66ccff; color: #000; }
+  .port { display: inline-block; padding: 3px 8px; margin: 2px; background: #0d1b2a; border: 1px solid #1e3a5f; border-radius: 3px; font-size: 0.8em; }
+  .loading { text-align: center; padding: 40px; color: #4a5568; }
+  .loading .spinner { display: inline-block; width: 24px; height: 24px; border: 3px solid #1e3a5f; border-top-color: #00d4ff; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 10px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .error-msg { color: #ff3333; padding: 20px; text-align: center; }
+  .summary { color: #8892a4; margin-top: 8px; font-size: 0.85em; }
+  .report-link { display: inline-block; margin-top: 15px; padding: 10px 20px; background: #00d4ff; color: #0a0e17; border-radius: 4px; text-decoration: none; font-weight: bold; }
+  .footer { text-align: center; color: #4a5568; padding: 30px; font-size: 0.8em; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>🛡️ NEXURA Scanner</h1>
+    <div class="subtitle">AI-powered vulnerability scanner — Tabiiy tilda buyruq bering</div>
+  </header>
+
+  <div class="input-area">
+    <textarea id="prompt" placeholder="Misol: example.com saytini zaifliklarga to'liq tekshir&#10;yoki: 192.168.1.1 dagi ochiq portlarni aniqlang&#10;yoki: saytda SQL injection bormi?">example.com ni zaifliklarga tekshir</textarea>
+    <div class="input-row">
+      <input type="text" id="target" placeholder="Target (ixtiyoriy, agar promptda bo'lmasa)">
+      <button id="scanBtn" onclick="startScan()">▶ Scan</button>
+    </div>
+    <div class="quick-btns">
+      <button onclick="quickCmd('example.com ochiq portlarni aniqlang')">🔍 Port scan</button>
+      <button onclick="quickCmd('testphp.vulnweb.com zaifliklarga tekshir')">🌐 Web vuln scan</button>
+      <button onclick="quickCmd('example.com da kataloglarni qidir')">📁 Directory brute</button>
+      <button onclick="quickCmd('testphp.vulnweb.com SQL injection bormi')">💉 SQLi test</button>
+    </div>
+  </div>
+
+  <div id="loading" class="loading" style="display:none">
+    <div class="spinner"></div>
+    <div>AI tahlil qilmoqda va skanerlamoqda...</div>
+  </div>
+
+  <div id="results" class="results"></div>
+
+  <div class="footer">Nexura Scanner v1.0 — AI Engine: {% if ai_ready %}✅ Ready{% else %}❌ Not ready (GGUF model faylini {{ models_dir }} ga joylashtiring){% endif %}</div>
+</div>
+
+<script>
+async function startScan() {
+  const prompt = document.getElementById('prompt').value.trim();
+  const target = document.getElementById('target').value.trim();
+  if (!prompt) return;
+
+  const btn = document.getElementById('scanBtn');
+  const results = document.getElementById('results');
+  const loading = document.getElementById('loading');
+
+  btn.disabled = true;
+  results.classList.remove('show');
+  loading.style.display = 'block';
+
+  try {
+    const resp = await fetch('/api/scan', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt, target: target || null }),
+    });
+    const data = await resp.json();
+
+    if (!resp.ok) {
+      showError(data.error || 'Server error');
+      return;
+    }
+
+    renderResults(data);
+  } catch (e) {
+    showError('Connection error: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    loading.style.display = 'none';
+  }
+}
+
+function renderResults(data) {
+  const el = document.getElementById('results');
+  let html = '';
+  let totalVulns = 0;
+  let sevCounts = {CRITICAL:0, HIGH:0, MEDIUM:0, LOW:0};
+
+  data.results.forEach(r => {
+    if (r.vulnerabilities) {
+      r.vulnerabilities.forEach(v => {
+        totalVulns++;
+        if (sevCounts[v.severity] !== undefined) sevCounts[v.severity]++;
+      });
+    }
+    const ok = r.success ? 'ok' : 'fail';
+    const statusText = r.success ? '✅ Success' : '❌ Failed';
+
+    html += `<div class="result-card">
+      <h3>▶ ${r.tool.toUpperCase()} <span class="status ${ok}">${statusText}</span></h3>
+      ${r.error ? `<div style="color:#ff3333">${r.error}</div>` : ''}
+      ${r.summary ? `<div class="summary">${r.summary}</div>` : ''}`;
+
+    if (r.ports && r.ports.length) {
+      html += '<div style="margin-top:8px">';
+      r.ports.forEach(p => { html += `<span class="port">🔓 ${p.port}/${p.service || '?'}</span>`; });
+      html += '</div>';
+    }
+
+    if (r.vulnerabilities && r.vulnerabilities.length) {
+      html += '<div style="margin-top:8px">';
+      r.vulnerabilities.forEach(v => {
+        html += `<div class="vuln ${v.severity}"><span class="badge">${v.severity}</span>${v.name}</div>`;
+      });
+      html += '</div>';
+    }
+    html += '</div>';
+  });
+
+  html = `<div style="display:flex;gap:15px;margin-bottom:20px;flex-wrap:wrap">
+    <div class="result-card" style="flex:1;min-width:120px;text-align:center">
+      <div style="font-size:2em;font-weight:bold;color:#00d4ff">${totalVulns}</div>
+      <div style="font-size:0.8em;color:#8892a4">Total</div>
+    </div>
+    <div class="result-card" style="flex:1;min-width:80px;text-align:center">
+      <div style="font-size:2em;font-weight:bold;color:#ff3333">${sevCounts.CRITICAL}</div>
+      <div style="font-size:0.8em;color:#8892a4">Critical</div>
+    </div>
+    <div class="result-card" style="flex:1;min-width:80px;text-align:center">
+      <div style="font-size:2em;font-weight:bold;color:#ff8800">${sevCounts.HIGH}</div>
+      <div style="font-size:0.8em;color:#8892a4">High</div>
+    </div>
+    <div class="result-card" style="flex:1;min-width:80px;text-align:center">
+      <div style="font-size:2em;font-weight:bold;color:#ffcc00">${sevCounts.MEDIUM}</div>
+      <div style="font-size:0.8em;color:#8892a4">Medium</div>
+    </div>
+    <div class="result-card" style="flex:1;min-width:80px;text-align:center">
+      <div style="font-size:2em;font-weight:bold;color:#66ccff">${sevCounts.LOW}</div>
+      <div style="font-size:0.8em;color:#8892a4">Low</div>
+    </div>
+  </div>` + html;
+
+  if (data.intent) {
+    html = `<div style="color:#8892a4;margin-bottom:15px">🎯 Intent: <strong>${data.intent}</strong></div>` + html;
+  }
+
+  html += `<div style="text-align:center">
+    <a class="report-link" href="/report/${data.id}" target="_blank">📄 Full HTML Report</a>
+  </div>`;
+
+  el.innerHTML = html;
+  el.classList.add('show');
+}
+
+function showError(msg) {
+  const el = document.getElementById('results');
+  el.innerHTML = `<div class="error-msg">❌ ${msg}</div>`;
+  el.classList.add('show');
+}
+
+function quickCmd(text) {
+  document.getElementById('prompt').value = text;
+  startScan();
+}
+</script>
+</body>
+</html>
